@@ -94,10 +94,10 @@ router.get('/', async (req, res) => {
       JOIN users u ON s.producer_id = u.id
       ${whereSql}
       ORDER BY ${orderBy}
-      LIMIT ? OFFSET ?
+          LIMIT ${limitNum} OFFSET ${offset}
     `;
 
-    const services = await query(sql, [...params, limitNum, offset]);
+    const services = await query(sql, params);
 
     // Format display price if not stored
     const formatted = services.map(s => ({
