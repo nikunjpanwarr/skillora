@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # Skillora Web & API Service
+  app:
+    build: .
+    container_name: skillora_app
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./uploads:/app/uploads
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=skillora_secure_password
+      - DB_NAME=skillora_db
+      - JWT_SECRET=skillora_docker_production_jwt_secret_key_32_chars
+      - ALLOWED_DOMAIN=bennett.edu.in
+      - ENABLE_DEMO_LOGIN=true
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # MySQL Database Service
+  mysql:
+    image: mysql:8.0
+    container_name: skillora_mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=skillora_secure_password
+      - MYSQL_DATABASE=skillora_db
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pskillora_secure_password"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql_data:

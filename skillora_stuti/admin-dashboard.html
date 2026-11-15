@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Admin Moderation Hub — Skillora</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .dash-wrap { max-width: 76rem; margin: 0 auto; padding: 32px 16px 80px; }
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; box-shadow: var(--soft); }
+    .stat-card small { color: var(--muted); font-size: .8rem; font-weight: 600; text-transform: uppercase; }
+    .stat-card .val { font-size: 2rem; font-weight: 800; font-family: "Bricolage Grotesque", sans-serif; margin-top: 4px; }
+    .tab-bar { display: flex; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 24px; overflow-x: auto; }
+    .tab-btn { background: none; border: 0; padding: 8px 16px; border-radius: 999px; font-weight: 600; font-size: .9rem; cursor: pointer; color: var(--muted); transition: .2s; }
+    .tab-btn.on { background: var(--lav-s); color: var(--lav-i); }
+    .panel { display: none; }
+    .panel.on { display: block; }
+    .admin-table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 20px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--soft); }
+    .admin-table th, .admin-table td { padding: 14px 18px; text-align: left; border-bottom: 1px solid var(--border); font-size: .9rem; }
+    .admin-table th { background: var(--bg); font-weight: 700; color: var(--muted); text-transform: uppercase; font-size: .75rem; }
+    .table-responsive { overflow-x: auto; margin-top: 16px; }
+    .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .75rem; font-weight: 700; text-transform: uppercase; }
+    .status-active { background: #dcfce7; color: #15803d; }
+    .status-suspended { background: var(--blush-s); color: var(--blush-i); }
+    .status-inactive { background: #f3f4f6; color: #4b5563; }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <symbol id="spark" viewBox="0 0 24 24"><path d="M11 3a1 1 0 0 1 2 0l1 5.5a2 2 0 0 0 1.6 1.6l5.5 1a1 1 0 0 1 0 2l-5.5 1a2 2 0 0 0-1.6 1.6l-1 5.5a1 1 0 0 1-2 0l-1-5.5a2 2 0 0 0-1.6-1.6l-5.5-1a1 1 0 0 1 0-2l5.5-1A2 2 0 0 0 10 8.5z"/><path d="M20 2v4M22 4h-4"/></symbol>
+    <symbol id="shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.7 0C7.5 20.500 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.500-1.200 6.200-2.700a1.200 1.200 0 0 1 1.500 0C14.500 3.800 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+  </defs></svg>
+
+  <div style="position:relative;isolation:isolate">
+    <div class="hero-bg" aria-hidden="true"></div>
+    <header>
+      <div class="bar" id="bar">
+        <a class="logo" href="index.html" aria-label="Skillora home">
+          <i><svg class="ic" style="width:16px;height:16px;stroke-width:2.5"><use href="#spark"/></svg></i>
+          <span class="disp">skillora</span>
+        </a>
+        <nav aria-label="Main">
+          <a href="index.html">Home</a>
+          <a href="explore.html">Explore</a>
+          <a class="on" href="admin-dashboard.html">Admin Hub</a>
+        </nav>
+        <div style="display:flex;gap:8px">
+          <a class="btn b-dark login" href="login.html">Login</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="dash-wrap">
+      <div style="margin-bottom:32px">
+        <span class="pill" style="margin-bottom:8px">Platform Moderation & Security</span>
+        <h1 class="disp" style="font-size:2.25rem;margin-top:4px">Admin Dashboard</h1>
+        <p class="sub" style="margin-top:4px">Monitor marketplace activity, moderate student service listings, and audit orders.</p>
+      </div>
+
+      <!-- Real Analytics Derived from Database -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <small>Gross Marketplace Volume</small>
+          <div class="val" id="stat-gmv" style="color:#15803d">₹0</div>
+        </div>
+        <div class="stat-card">
+          <small>Verified Users</small>
+          <div class="val" id="stat-users">0</div>
+        </div>
+        <div class="stat-card">
+          <small>Active Listings</small>
+          <div class="val" id="stat-services" style="color:var(--lav-i)">0</div>
+        </div>
+        <div class="stat-card">
+          <small>Total Orders</small>
+          <div class="val" id="stat-orders">0</div>
+        </div>
+        <div class="stat-card">
+          <small>Completed Orders</small>
+          <div class="val" id="stat-completed" style="color:var(--charcoal)">0</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tab-bar">
+        <button class="tab-btn on" data-tab="services" type="button">Service Moderation</button>
+        <button class="tab-btn" data-tab="users" type="button">User Management</button>
+        <button class="tab-btn" data-tab="orders" type="button">All Orders Audit</button>
+        <button class="tab-btn" data-tab="reports" type="button">Platform Reports</button>
+      </div>
+
+      <!-- Panel: Service Moderation -->
+      <div id="panel-services" class="panel on">
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Service Title</th>
+                <th>Category</th>
+                <th>Producer</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="services-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Panel: Users Management -->
+      <div id="panel-users" class="panel">
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>University Email</th>
+                <th>Department</th>
+                <th>Role</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Panel: All Orders -->
+      <div id="panel-orders" class="panel">
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Order #</th>
+                <th>Service</th>
+                <th>Buyer</th>
+                <th>Producer</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="orders-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Panel: Platform Reports (Phase 10) -->
+      <div id="panel-reports" class="panel">
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Reported Item</th>
+                <th>Reporter</th>
+                <th>Reason</th>
+                <th>Details</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="reports-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer">
+      <div class="fw"><div class="fg">
+        <div>
+          <a class="logo" href="index.html"><i><svg class="ic" style="width:16px;height:16px;stroke-width:2.5"><use href="#spark"/></svg></i><span class="disp">skillora</span></a>
+          <p style="margin-top:16px;max-width:20rem">Your Campus. Your Skills. Your Opportunities.</p>
+          <a class="soc-wrap" href="https://www.instagram.com/theskillora_bennett?utm_source=ig_web_button_share_sheet&vrfl=ZDNlZDc0MzIxNw==" target="_blank" rel="noreferrer" aria-label="Skillora on Instagram @theskillora_bennett"><span class="soc" style="margin-top:0"><svg class="ic" style="width:16px;height:16px"><use href="#ig"/></svg></span><span class="soc-handle">@theskillora_bennett</span></a>
+        </div>
+        <div>
+          <h4 style="color:var(--lav)">Explore</h4>
+          <ul><li><a href="explore.html">All services</a></li><li><a href="producer-dashboard.html">Producer Hub</a></li></ul>
+        </div>
+        <div>
+          <h4 style="color:var(--blush)">Company</h4>
+          <ul><li><a href="about.html">About Us</a></li><li><a href="about.html#contact">Contact</a></li></ul>
+        </div>
+        <div>
+          <h4 style="color:var(--butter)">Contact</h4>
+          <ul><li>Bennett University, Greater Noida, UP</li></ul>
+        </div>
+      </div>
+      <div class="fb"><span>© 2026 Skillora. Administration Hub.</span><span>Bennett University Exclusive</span></div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="auth.js"></script>
+  <script src="script.js"></script>
+  <script src="admin-dashboard.js"></script>
+</body>
+</html>

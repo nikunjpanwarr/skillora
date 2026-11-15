@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>My Dashboard — Skillora</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .dash-wrap { max-width: 72rem; margin: 0 auto; padding: 32px 16px 80px; }
+    .dash-header { margin-bottom: 28px; }
+    .tab-bar { display: flex; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 24px; overflow-x: auto; }
+    .tab-btn { background: none; border: 0; padding: 8px 16px; border-radius: 999px; font-weight: 600; font-size: .9rem; cursor: pointer; color: var(--muted); transition: .2s; }
+    .tab-btn.on { background: var(--lav-s); color: var(--lav-i); }
+    .panel { display: none; }
+    .panel.on { display: block; }
+    .order-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 24px; margin-bottom: 16px; box-shadow: var(--soft); display: flex; flex-direction: column; gap: 14px; }
+    @media(min-width: 768px) {
+      .order-card { flex-direction: row; justify-content: space-between; align-items: center; }
+    }
+    .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .75rem; font-weight: 700; text-transform: uppercase; }
+    .status-pending { background: var(--butter-s); color: var(--butter-i); }
+    .status-in_progress, .status-accepted { background: var(--lav-s); color: var(--lav-i); }
+    .status-delivered { background: #e0f2fe; color: #0284c7; }
+    .status-completed { background: #dcfce7; color: #15803d; }
+    .status-cancelled, .status-rejected { background: var(--blush-s); color: var(--blush-i); }
+    
+    /* Notification item */
+    .notif-item { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--soft); }
+    .notif-item.unread { border-left: 4px solid var(--lav-i); }
+
+    /* Modal dialog */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(4px); display: none; place-items: center; z-index: 100; padding: 16px; }
+    .modal-overlay.open { display: grid; }
+    .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 28px; width: 100%; max-width: 480px; box-shadow: var(--lift); }
+    .star-rating { display: flex; gap: 8px; font-size: 1.75rem; cursor: pointer; color: #d1d5db; margin: 12px 0 16px; }
+    .star-rating span.on { color: #f59e0b; }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <symbol id="spark" viewBox="0 0 24 24"><path d="M11 3a1 1 0 0 1 2 0l1 5.5a2 2 0 0 0 1.6 1.6l5.5 1a1 1 0 0 1 0 2l-5.5 1a2 2 0 0 0-1.6 1.6l-1 5.5a1 1 0 0 1-2 0l-1-5.5a2 2 0 0 0-1.6-1.6l-5.5-1a1 1 0 0 1 0-2l5.5-1A2 2 0 0 0 10 8.5z"/><path d="M20 2v4M22 4h-4"/></symbol>
+    <symbol id="heart" viewBox="0 0 24 24"><path d="M2 9.500a5.500 5.500 0 0 1 9.600-3.700.6.6 0 0 0 .8 0A5.500 5.500 0 0 1 22 9.500c0 2.300-1.500 4-3 5.500l-5.500 5.300a2 2 0 0 1-3 0L5 15c-1.500-1.500-3-3.200-3-5.500"/></symbol>
+    <symbol id="mail" viewBox="0 0 24 24"><path d="m22 7-9 5.700a2 2 0 0 1-2 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/></symbol>
+    <symbol id="pin" viewBox="0 0 24 24"><path d="M20 10c0 5-5.500 10.200-7.400 11.800a1 1 0 0 1-1.200 0C9.500 20.200 4 15 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
+  </defs></svg>
+
+  <div style="position:relative;isolation:isolate">
+    <div class="hero-bg" aria-hidden="true"></div>
+    <header>
+      <div class="bar" id="bar">
+        <a class="logo" href="index.html" aria-label="Skillora home">
+          <i><svg class="ic" style="width:16px;height:16px;stroke-width:2.5"><use href="#spark"/></svg></i>
+          <span class="disp">skillora</span>
+        </a>
+        <nav aria-label="Main">
+          <a href="index.html">Home</a>
+          <a href="explore.html">Explore Services</a>
+          <a class="on" href="consumer-dashboard.html">My Dashboard</a>
+          <a href="producer-dashboard.html">Producer Hub</a>
+        </nav>
+        <div style="display:flex;gap:8px">
+          <a class="btn b-dark login" href="login.html">Login</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="dash-wrap">
+      <div class="dash-header">
+        <span class="pill" style="margin-bottom:8px">Student Consumer Dashboard</span>
+        <h1 class="disp" id="welcome-title" style="font-size:2.25rem;margin-top:4px">My Account</h1>
+        <p class="sub" id="welcome-sub" style="margin-top:4px">Track your service orders, saved favorites, and in-app notifications.</p>
+      </div>
+
+      <div class="tab-bar">
+        <button class="tab-btn on" data-tab="orders" type="button">My Orders</button>
+        <button class="tab-btn" data-tab="favs" type="button">Saved Favourites</button>
+        <button class="tab-btn" data-tab="notifs" type="button">Notifications <span id="notif-badge" style="background:var(--blush-i);color:#fff;border-radius:999px;padding:1px 6px;font-size:.7rem;margin-left:4px;display:none">0</span></button>
+      </div>
+
+      <!-- Panel: Orders -->
+      <div id="panel-orders" class="panel on">
+        <div id="orders-container"></div>
+      </div>
+
+      <!-- Panel: Saved Favourites -->
+      <div id="panel-favs" class="panel">
+        <div id="favs-grid" class="g4"></div>
+      </div>
+
+      <!-- Panel: Notifications -->
+      <div id="panel-notifs" class="panel">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+          <button id="mark-all-btn" class="btn b-out" style="height:32px;font-size:.75rem">Mark all as read</button>
+        </div>
+        <div id="notifs-list"></div>
+      </div>
+    </main>
+
+    <!-- Order Messaging Modal (Phase 9) -->
+    <div id="chat-modal" class="modal-overlay">
+      <div class="modal-box" style="max-width:540px;display:flex;flex-direction:column;max-height:85vh">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:12px">
+          <div>
+            <h3 class="disp" id="chat-partner-name" style="font-size:1.2rem">Order Chat</h3>
+            <small id="chat-order-no" style="color:var(--muted)">SKO-XXXXXX</small>
+          </div>
+          <button id="close-chat-btn" class="btn b-ghost" style="height:32px;padding:0 10px;font-size:.8rem" type="button">Close</button>
+        </div>
+        <div id="chat-messages" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:12px 4px;min-height:220px;max-height:360px"></div>
+        <form id="chat-form" style="display:flex;gap:8px;margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+          <input id="chat-input" placeholder="Type a message to producer..." required style="flex:1;padding:10px 14px;border-radius:12px;border:1px solid var(--border);font-family:inherit;background:var(--bg)">
+          <button class="btn b-dark" type="submit" style="padding:0 18px">Send</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Review Modal Dialog -->
+    <div id="review-modal" class="modal-overlay">
+      <div class="modal-box">
+        <h3 class="disp" style="margin-bottom:4px">Leave a Review</h3>
+        <p style="color:var(--muted);font-size:.875rem;margin-bottom:16px">Share your feedback to support fellow Bennett student creators.</p>
+        <div class="star-rating" id="star-picker">
+          <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span>
+        </div>
+        <textarea id="review-comment" placeholder="Describe your experience with the service, timeliness, and quality..." style="width:100%;min-height:90px;padding:12px;border:1px solid var(--border);border-radius:12px;font-family:inherit;background:var(--bg)"></textarea>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+          <button id="cancel-review-btn" class="btn b-ghost" type="button">Cancel</button>
+          <button id="submit-review-btn" class="btn b-grad" type="button">Submit Review</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Escrow Payment Modal Dialog (Phase 8) -->
+    <div id="payment-modal" class="modal-overlay">
+      <div class="modal-box">
+        <span class="pill" style="margin-bottom:8px">Campus Escrow Payment</span>
+        <h3 class="disp" id="pay-title" style="margin-top:4px">Secure Payment</h3>
+        <p style="color:var(--muted);font-size:.875rem;margin:8px 0 16px">Funds are held securely by Bennett Campus Escrow and released only after you confirm satisfactory delivery.</p>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+            <span style="color:var(--muted)">Order:</span>
+            <b id="pay-order-no">SKO-XXXXXX</b>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+            <span style="color:var(--muted)">Campus UPI VPA:</span>
+            <code>skillora.escrow@bennett</code>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:1.15rem;font-weight:800;border-top:1px dashed var(--border);padding-top:8px">
+            <span>Amount:</span>
+            <span id="pay-amount">₹0</span>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <button id="cancel-pay-btn" class="btn b-ghost" type="button">Close</button>
+          <button id="confirm-pay-btn" class="btn b-grad" type="button">Confirm & Authorize Escrow</button>
+        </div>
+      </div>
+    </div>
+
+    <footer id="footer">
+      <div class="fw"><div class="fg">
+        <div>
+          <a class="logo" href="index.html"><i><svg class="ic" style="width:16px;height:16px;stroke-width:2.5"><use href="#spark"/></svg></i><span class="disp">skillora</span></a>
+          <p style="margin-top:16px;max-width:20rem">Your Campus. Your Skills. Your Opportunities.</p>
+          <a class="soc-wrap" href="https://www.instagram.com/theskillora_bennett?utm_source=ig_web_button_share_sheet&vrfl=ZDNlZDc0MzIxNw==" target="_blank" rel="noreferrer" aria-label="Skillora on Instagram @theskillora_bennett"><span class="soc" style="margin-top:0"><svg class="ic" style="width:16px;height:16px"><use href="#ig"/></svg></span><span class="soc-handle">@theskillora_bennett</span></a>
+        </div>
+        <div>
+          <h4 style="color:var(--lav)">Explore</h4>
+          <ul><li><a href="explore.html">All services</a></li><li><a href="producer-dashboard.html">Producer Hub</a></li></ul>
+        </div>
+        <div>
+          <h4 style="color:var(--blush)">Company</h4>
+          <ul><li><a href="about.html">About Us</a></li><li><a href="about.html#contact">Contact</a></li></ul>
+        </div>
+        <div>
+          <h4 style="color:var(--butter)">Contact</h4>
+          <ul><li><svg class="ic"><use href="#mail"/></svg><a href="mailto:hello@skillora.in">hello@skillora.in</a></li><li><svg class="ic"><use href="#pin"/></svg>Bennett University, Greater Noida</li></ul>
+        </div>
+      </div><div class="fb"><span>© 2026 Skillora. Made by students, for students.</span></div></div>
+    </footer>
+  </div>
+
+  <script src="auth.js"></script>
+  <script src="script.js"></script>
+  <script src="consumer-dashboard.js"></script>
+</body>
+</html>

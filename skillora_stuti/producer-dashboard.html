@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Producer Dashboard — Skillora</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .dash-wrap { max-width: 72rem; margin: 0 auto; padding: 32px 16px 80px; }
+    .dash-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 32px; }
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; box-shadow: var(--soft); }
+    .stat-card small { color: var(--muted); font-size: .8rem; font-weight: 600; text-transform: uppercase; }
+    .stat-card .val { font-size: 2rem; font-weight: 800; font-family: "Bricolage Grotesque", sans-serif; margin-top: 4px; }
+    .tab-bar { display: flex; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 24px; overflow-x: auto; }
+    .tab-btn { background: none; border: 0; padding: 8px 16px; border-radius: 999px; font-weight: 600; font-size: .9rem; cursor: pointer; color: var(--muted); transition: .2s; }
+    .tab-btn.on { background: var(--lav-s); color: var(--lav-i); }
+    .panel { display: none; }
+    .panel.on { display: block; }
+    .order-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: var(--soft); display: flex; flex-direction: column; gap: 12px; }
+    @media(min-width: 768px) {
+      .order-card { flex-direction: row; justify-content: space-between; align-items: center; }
+    }
+    .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .75rem; font-weight: 700; text-transform: uppercase; }
+    .status-pending { background: var(--butter-s); color: var(--butter-i); }
+    .status-in_progress, .status-accepted { background: var(--lav-s); color: var(--lav-i); }
+    .status-delivered { background: #e0f2fe; color: #0284c7; }
+    .status-completed { background: #dcfce7; color: #15803d; }
+    .status-cancelled, .status-rejected { background: var(--blush-s); color: var(--blush-i); }
+    .form-box { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 28px; max-width: 40rem; box-shadow: var(--soft); }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: .875rem; font-weight: 600; margin-bottom: 6px; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); font-family: inherit; font-size: .95rem; background: var(--bg); color: var(--fg); }
+    .form-group select { cursor: pointer; }
+    .form-group select option { background: #fff; color: #1d1b26; padding: 6px; }
+    .form-group textarea { min-height: 100px; resize: vertical; }
+
+    /* Modal styling */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(4px); display: none; place-items: center; z-index: 100; padding: 16px; }
+    .modal-overlay.open { display: grid; }
+    .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 28px; width: 100%; max-width: 480px; box-shadow: var(--lift); }
+  </style>
+</head>
+<body>
+  <!-- Inline SVG Symbols -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <symbol id="spark" viewBox="0 0 24 24"><path d="M11 3a1 1 0 0 1 2 0l1 5.5a2 2 0 0 0 1.6 1.6l5.5 1a1 1 0 0 1 0 2l-5.5 1a2 2 0 0 0-1.6 1.6l-1 5.5a1 1 0 0 1-2 0l-1-5.5a2 2 0 0 0-1.6-1.6l-5.5-1a1 1 0 0 1 0-2l5.5-1A2 2 0 0 0 10 8.5z"/><path d="M20 2v4M22 4h-4"/></symbol>
+    <symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14m-7-7h14"/></symbol>
+    <symbol id="chk" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></symbol>
+    <symbol id="x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="mail" viewBox="0 0 24 24"><path d="m22 7-9 5.700a2 2 0 0 1-2 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/></symbol>
+    <symbol id="pin" viewBox="0 0 24 24"><path d="M20 10c0 5-5.500 10.200-7.400 11.800a1 1 0 0 1-1.200 0C9.500 20.200 4 15 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="ig" viewBox="0 0 24 24"><rect width="20" height="20" x="2" y="2" rx="5"/><path d="M16 11.400A4 4 0 1 1 12.600 8 4 4 0 0 1 16 11.400zM17.500 6.500h.01"/></symbol>
+  </defs></svg>
+
+  <div style="position:relative;isolation:isolate">
+    <div class="hero-bg" aria-hidden="true"></div>
+    <header>
+      <div class="bar" id="bar">
+        <a class="logo" href="index.html" aria-label="Skillora home">
+          <i><svg class="ic" style="width:16px;height:16px;stroke-width:2.5"><use href="#spark"/></svg></i>
+          <span class="disp">skillora</span>
+        </a>
+        <nav aria-label="Main">
+          <a href="index.html">Home</a>
+          <a href="explore.html">Explore Services</a>
+          <a class="on" href="producer-dashboard.html">Producer Hub</a>
+          <a href="consumer-dashboard.html">My Orders</a>
+        </nav>
+        <div style="display:flex;gap:8px">
+          <a class="btn b-dark login" href="login.html">Login</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="dash-wrap">
+      <div class="dash-header">
+        <div>
+          <span class="pill" style="margin-bottom:8px">Producer Dashboard</span>
+          <h1 class="disp" id="welcome-name" style="font-size:2.25rem;margin-top:4px">Welcome Back</h1>
+          <p class="sub" id="welcome-dept" style="margin-top:4px">Manage your Bennett service listings, incoming orders, and student earnings.</p>
+        </div>
+        <button id="btn-create-top" class="btn lg b-grad" type="button">
+          <svg class="ic" style="width:16px;height:16px"><use href="#plus"/></svg> Publish New Service
+        </button>
+      </div>
+
+      <!-- Live Performance Metrics -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <small>Total Earnings</small>
+          <div class="val" id="stat-earnings" style="color:var(--charcoal)">₹0</div>
+        </div>
+        <div class="stat-card">
+          <small>Active Listings</small>
+          <div class="val" id="stat-listings" style="color:var(--lav-i)">0</div>
+        </div>
+        <div class="stat-card">
+          <small>Pending Requests</small>
+          <div class="val" id="stat-pending" style="color:var(--butter-i)">0</div>
+        </div>
+        <div class="stat-card">
+          <small>Completed Orders</small>
+          <div class="val" id="stat-completed" style="color:#15803d">0</div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="tab-bar">
+        <button class="tab-btn on" data-tab="listings" type="button">My Listings</button>
+        <button class="tab-btn" data-tab="orders" type="button">Incoming Orders</button>
+        <button class="tab-btn" data-tab="create" type="button">+ New Service</button>
+      </div>
+
+      <!-- Panel: My Listings -->
+      <div id="panel-listings" class="panel on">
+        <div id="listings-grid" class="g4" style="margin-top:16px"></div>
+      </div>
+
+      <!-- Panel: Incoming Orders -->
+      <div id="panel-orders" class="panel">
+        <div id="orders-list"></div>
+      </div>
+
+      <!-- Panel: Create Service -->
+      <div id="panel-create" class="panel">
+        <div class="form-box">
+          <h3 class="disp" style="margin-bottom:16px">Publish a Student Service</h3>
+          <form id="create-service-form">
+            <div class="form-group">
+              <label for="srv-title">Service Title</label>
+              <input id="srv-title" required placeholder="e.g. Fast Instagram Reel Editing with Captions">
+            </div>
+            <div class="form-group">
+              <label for="srv-cat">Category</label>
+              <select id="srv-cat" required>
+                <option value="">-- Choose a Category --</option>
+                <option value="video-editing">Video Editing</option>
+                <option value="graphic-design">Graphic Design</option>
+                <option value="content-writing">Content Writing</option>
+                <option value="web-development">Web Development</option>
+                <option value="photography">Photography</option>
+                <option value="social-media">Social Media</option>
+                <option value="presentations">Presentations</option>
+                <option value="coding">Coding Help</option>
+                <option value="ui-ux-design">UI/UX & App Design</option>
+                <option value="tutoring-academics">Tutoring & Academics</option>
+                <option value="music-audio">Music & Audio Production</option>
+                <option value="career-resume">Resume & Career Prep</option>
+                <option value="event-coverage">Event & Campus Coverage</option>
+                <option value="ai-data-analytics">AI & Data Analytics</option>
+                <option value="__custom__">✍️ Other / Write your own category...</option>
+              </select>
+            </div>
+            <div class="form-group" id="custom-cat-box" style="display:none;margin-top:10px">
+              <label for="srv-cat-custom">Write Your Category Name</label>
+              <input id="srv-cat-custom" placeholder="e.g. UI/UX Design, Guitar Lessons, Resume Review..." list="custom-cat-suggestions">
+              <datalist id="custom-cat-suggestions">
+                <option value="UI/UX & App Design">
+                <option value="Tutoring & Academics">
+                <option value="Music & Audio Production">
+                <option value="Resume & Career Prep">
+                <option value="Event & Campus Coverage">
+                <option value="AI & Data Analytics">
+                <option value="Podcast & Voiceover">
+                <option value="Fitness & Sports Coaching">
+                <option value="Hardware & Tech Support">
+              </datalist>
+              <small style="color:var(--muted);font-size:.78rem">Type any custom category for your campus service.</small>
+            </div>
+            <div class="form-group">
+              <label for="srv-price">Starting Price (₹)</label>
+              <input id="srv-price" type="number" min="0" required placeholder="499">
+            </div>
+            <div class="form-group">
+              <label for="srv-delivery">Estimated Delivery Time</label>
+              <input id="srv-delivery" placeholder="e.g. 24 hours, 2-3 days" value="2-3 days">
+            </div>
+            <div class="form-group">
+              <label for="srv-desc">Description & Deliverables</label>
+              <textarea id="srv-desc" required placeholder="Describe what you will provide, your tools, and requirements from the buyer..."></textarea>
+            </div>
+            <div class="form-group">
+              <label for="srv-badge">Listing Badge (Optional)</label>
+              <input id="srv-badge" placeholder="Available / Popular / Fast Delivery" value="Available">
+            </div>
+            <div class="form-group">
+              <label for="srv-image">Service Thumbnail / Sample Image (Optional)</label>
+              <input id="srv-image" type="file" accept="image/png, image/jpeg, image/webp" style="padding:8px">
+              <small style="color:var(--muted);font-size:.78rem">Max 5MB. PNG, JPEG, or WebP.</small>
+            </div>
+            <p id="srv-msg" class="err" role="alert"></p>
+            <button class="btn lg b-dark" type="submit" style="width:100%;margin-top:12px">Publish Listing</button>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <!-- Order Messaging Modal (Phase 9) -->
+    <div id="chat-modal" class="modal-overlay">
+      <div class="modal-box" style="max-width:540px;display:flex;flex-direction:column;max-height:85vh">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:12px">
+          <div>
+            <h3 class="disp" id="chat-partner-name" style="font-size:1.2rem">Order Chat</h3>
+            <small id="chat-order-no" style="color:var(--muted)">SKO-XXXXXX</small>
+          </div>
+          <button id="close-chat-btn" class="btn b-ghost" style="height:32px;padding:0 10px;font-size:.8rem" type="button">Close</button>
+        </div>
+        <div id="chat-messages" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:12px 4px;min-height:220px;max-height:360px"></div>
+        <form id="chat-form" style="display:flex;gap:8px;margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+          <input id="chat-input" placeholder="Type a message to buyer..." required style="flex:1;padding:10px 14px;border-radius:12px;border:1px solid var(--border);font-family:inherit;background:var(--bg)">
+          <button class="btn b-dark" type="submit" style="padding:0 18px">Send</button>
+        </form>
+      </div>
+    </div>
+
+    <footer id="footer">
+      <div class="fw"><div class="fg">
+        <div>
+          <a class="logo" href="index.html"><i><svg class="ic" style="width:16px;height:16px;stroke-width:2.5"><use href="#spark"/></svg></i><span class="disp">skillora</span></a>
+          <p style="margin-top:16px;max-width:20rem">Your Campus. Your Skills. Your Opportunities.</p>
+          <a class="soc-wrap" href="https://www.instagram.com/theskillora_bennett?utm_source=ig_web_button_share_sheet&vrfl=ZDNlZDc0MzIxNw==" target="_blank" rel="noreferrer" aria-label="Skillora on Instagram @theskillora_bennett"><span class="soc" style="margin-top:0"><svg class="ic" style="width:16px;height:16px"><use href="#ig"/></svg></span><span class="soc-handle">@theskillora_bennett</span></a>
+        </div>
+        <div>
+          <h4 style="color:var(--lav)">Explore</h4>
+          <ul><li><a href="explore.html">All services</a></li><li><a href="producer-dashboard.html">Producer Hub</a></li></ul>
+        </div>
+        <div>
+          <h4 style="color:var(--blush)">Company</h4>
+          <ul><li><a href="about.html">About Us</a></li><li><a href="about.html#contact">Contact</a></li></ul>
+        </div>
+        <div>
+          <h4 style="color:var(--butter)">Contact</h4>
+          <ul><li><svg class="ic"><use href="#mail"/></svg><a href="mailto:hello@skillora.in">hello@skillora.in</a></li><li><svg class="ic"><use href="#pin"/></svg>Bennett University, Greater Noida</li></ul>
+        </div>
+      </div><div class="fb"><span>© 2026 Skillora. Made by students, for students.</span></div></div>
+    </footer>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="auth.js"></script>
+  <script src="script.js"></script>
+  <script src="producer-dashboard.js"></script>
+</body>
+</html>
