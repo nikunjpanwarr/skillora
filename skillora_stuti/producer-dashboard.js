@@ -226,39 +226,92 @@
       }
     } catch(e) {}
   }
-
-  // 5. Handle Service Creation (Supports image upload via FormData)
+  // 5. Handle Service Creation (Mobile-Optimized & Form Validation)
   var form = document.getElementById("create-service-form");
   var msg = document.getElementById("srv-msg");
+  var submitBtn = document.getElementById("btn-publish-submit") || (form && form.querySelector("button[type=submit]"));
+
+  function showFormErr(text, elementId) {
+    if (msg) msg.textContent = text;
+    if (typeof window.showToast === 'function') {
+      window.showToast(text, "error");
+    }
+    if (elementId) {
+      var el = document.getElementById(elementId);
+      if (el) {
+        el.focus();
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }
+
   form.addEventListener("submit", async function(e){
     e.preventDefault();
-    msg.textContent = "";
+    if (msg) msg.textContent = "";
 
     var catSelect = document.getElementById("srv-cat");
     var customInput = document.getElementById("srv-cat-custom");
     var customBox = document.getElementById("custom-cat-box");
-    var chosenCategory = (catSelect.value === "__custom__") 
+    var chosenCategory = (catSelect && catSelect.value === "__custom__") 
       ? (customInput ? customInput.value.trim() : "") 
-      : catSelect.value.trim();
+      : (catSelect ? catSelect.value.trim() : "");
 
-    if (!chosenCategory) {
-      msg.textContent = "Please select a category or write your own.";
+    var titleInput = document.getElementById("srv-title");
+    var priceInput = document.getElementById("srv-price");
+    var descInput = document.getElementById("srv-desc");
+    var deliveryInput = document.getElementById("srv-delivery");
+    var badgeInput = document.getElementById("srv-badge");
+    var imageInput = document.getElementById("srv-image");
+
+    var titleVal = titleInput ? titleInput.value.trim() : "";
+    var priceVal = priceInput ? priceInput.value.trim() : "";
+    var descVal = descInput ? descInput.value.trim() : "";
+
+    // Client-side validation with instant mobile feedback
+    if (!titleVal || titleVal.length < 5) {
+      showFormErr("Service title must be at least 5 characters.", "srv-title");
       return;
     }
 
-    var imageInput = document.getElementById("srv-image");
+    if (!chosenCategory) {
+      showFormErr("Please select a category or write your own.", "srv-cat");
+      return;
+    }
+
+    if (!priceVal || isNaN(priceVal) || Number(priceVal) < 0) {
+      showFormErr("Please enter a valid price (₹0 or more).", "srv-price");
+      return;
+    }
+
+    if (!descVal || descVal.length < 15) {
+      showFormErr("Description must be at least 15 characters long.", "srv-desc");
+      return;
+    }
+
     var hasFile = imageInput && imageInput.files && imageInput.files.length > 0;
+    if (hasFile && imageInput.files[0].size > 5 * 1024 * 1024) {
+      showFormErr("The selected image is larger than 5MB. Please choose a smaller photo.", "srv-image");
+      return;
+    }
+
+    // Set loading state on button to prevent double-tap on mobile
+    var origBtnText = submitBtn ? submitBtn.innerHTML : "Publish Listing";
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = "0.7";
+      submitBtn.innerHTML = "Publishing Listing... ⏳";
+    }
 
     try {
       var res;
       if (hasFile) {
         var formData = new FormData();
-        formData.append("title", document.getElementById("srv-title").value.trim());
+        formData.append("title", titleVal);
         formData.append("category_slug", chosenCategory);
-        formData.append("price", document.getElementById("srv-price").value);
-        formData.append("delivery_time", document.getElementById("srv-delivery").value.trim());
-        formData.append("description", document.getElementById("srv-desc").value.trim());
-        formData.append("badge", document.getElementById("srv-badge").value.trim());
+        formData.append("price", priceVal);
+        formData.append("delivery_time", deliveryInput ? deliveryInput.value.trim() : "2-3 days");
+        formData.append("description", descVal);
+        formData.append("badge", badgeInput ? badgeInput.value.trim() : "Available");
         formData.append("image", imageInput.files[0]);
 
         res = await fetch(apiHost + '/api/producer/services', {
@@ -268,12 +321,12 @@
         });
       } else {
         var payload = {
-          title: document.getElementById("srv-title").value.trim(),
+          title: titleVal,
           category_slug: chosenCategory,
-          price: document.getElementById("srv-price").value,
-          delivery_time: document.getElementById("srv-delivery").value.trim(),
-          description: document.getElementById("srv-desc").value.trim(),
-          badge: document.getElementById("srv-badge").value.trim()
+          price: priceVal,
+          delivery_time: deliveryInput ? deliveryInput.value.trim() : "2-3 days",
+          description: descVal,
+          badge: badgeInput ? badgeInput.value.trim() : "Available"
         };
 
         res = await fetch(apiHost + '/api/producer/services', {
@@ -289,18 +342,26 @@
         form.reset();
         if (customBox) customBox.style.display = "none";
         if (typeof window.showToast === 'function') {
-          window.showToast("Service listing published successfully!");
+          window.showToast("Service listing published successfully!", "success");
         } else {
           alert("Service listing published successfully!");
         }
         setTab("listings");
         loadServices();
         loadStats();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
-        msg.textContent = data.error || "Failed to publish service";
+        var errStr = data.error || data.message || "Failed to publish service";
+        showFormErr(errStr);
       }
     } catch(err) {
-      msg.textContent = "Network error. Please try again.";
+      showFormErr("Network error. Please check your connection and try again.");
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = "1";
+        submitBtn.innerHTML = origBtnText;
+      }
     }
   });
 
